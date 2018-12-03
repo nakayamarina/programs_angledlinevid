@@ -41,7 +41,7 @@ PATH = args[1]
 # PATH = '../Active/20181119mt/RawData/'
 
 # 1時系列あたりのスキャン数
-N = 30
+N = 20
 
 # 検証手法
 col_name = 'leave-one-out'
@@ -145,6 +145,7 @@ def SVM_LOO(data):
         # ラベルを作成
         y_train = np.array(list(traindata['label']))
 
+        print("Test Data : " + str(test_fst) + "-" + str(test_end) + " / Train Data Num : " + str(len(traindata)))
 
         # 線形SVMのインスタンスを生成
         model = svm.SVC(kernel = 'linear', C=1)
@@ -230,6 +231,7 @@ if __name__ == '__main__':
 
     # In[352]:
 
+    print(voxAc)
     # csv書き出し
     PATH_RESULT = PATH + 'ACCURACY[loo]_VOXtimeseries' + str(N) +'_SVM.csv'
     voxAc.to_csv(PATH_RESULT, index = True)
