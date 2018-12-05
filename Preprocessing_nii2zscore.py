@@ -8,7 +8,7 @@
 #
 # ---
 #
-# 入力：4D化した.niiファイル，[部位名]mask.niiファイル（chunks_list.csv, targets_list.csv）
+# 入力：4D化した.niiファイルがあるフォルダまでのパス / 書き出すcsvの保存先 / mask名（chunks_list.csv, targets_list.csv）
 #
 # ---
 #
@@ -51,9 +51,7 @@
 # 15. 再生ボタンを押す → rwmask.niiができる
 #
 #
-# ※作成したrwmask.niiはどの部位のマスクかわかるように名前を変えている
-# ・rwBA.nii：ブロードマンエリア全て
-# ・rwmask12346.nii：ブロードマンエリア1,2,3,4,6
+
 
 # In[1]:
 
@@ -165,7 +163,7 @@ def splitVoxRun(data):
     for i in range(len(data.columns)):
 
         print('----- Voxel' + str(i + 1) + ' -----')
-        
+
         # ボクセルで試行ごとに分割，reshapeを使って1列データを(試行数，1タスクのスキャン数)に
         vox_run = np.reshape(list(data.iloc[:, i]), (runNum, taskNum))
 

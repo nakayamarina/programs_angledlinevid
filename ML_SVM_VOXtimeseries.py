@@ -8,7 +8,7 @@
 #
 # ----
 #
-# 入力：raw_a45.csv/raw_al135.csv
+# 入力：raw_al45.csv/raw_al135.csv
 #
 # ----
 #
@@ -18,12 +18,12 @@
 # ボクセルごとにあるデータにおけるNスキャン分の時系列データをテストデータ，テストデータを除いた残りのデータにおけるNスキャン分の時系列データ1ずつずらしながらを学習データとして取得し，SVMを用いて学習，交差検証法を用いて識別性能評価を行う．
 # ベクトル：各ボクセルにおけるデータにおけるNスキャン分の時系列データ
 
-# In[343]:
+# In[1]:
 
 print('############ ML_SVM_VOXtimeseries.py program excution ############')
 
 
-# In[344]:
+# In[2]:
 
 import numpy as np
 import pandas as pd
@@ -32,16 +32,16 @@ import sys
 from sklearn import svm
 
 
-# In[345]:
+# In[356]:
 
 args = sys.argv
 PATH = args[1]
 
-# jupyter notebookのときはここで指定
+# # jupyter notebookのときはここで指定
 # PATH = '../Active/20181119mt/RawData/'
 
 # 1時系列あたりのスキャン数
-N = 20
+N = 30
 
 # 検証手法
 col_name = 'leave-one-out'
@@ -54,7 +54,7 @@ runNum = 4
 # 引数としてあるボクセルにおける全試行分のデータをdata，タスクを見分けるための番号をlabelに受け取る．
 # 各試行で1ずつずらしながらNスキャン分の時系列データを取得する．全試行の時系列データをまとめて返す．
 
-# In[346]:
+# In[357]:
 
 def TsShift(data, label):
 
@@ -91,8 +91,6 @@ def TsShift(data, label):
     return ts_all
 
 
-# In[ ]:
-
 # ## SVM_LOO関数
 # 学習と評価に用いるデータをdataで受け取り．
 # データからテストデータ，テストデータラベル，教師データ，教師データラベルを生成．
@@ -100,8 +98,7 @@ def TsShift(data, label):
 # テストデータに用いるデータごとに識別できたかできなかったか（1か0）を取得，全テストデータで識別できた(1)の割合を算出（leave-one-outと同じ要領）．
 # 得られた割合をパーセント表記にし，main関数へ返す．
 
-
-# In[347]:
+# In[3]:
 
 def SVM_LOO(data):
 
@@ -145,7 +142,9 @@ def SVM_LOO(data):
         # ラベルを作成
         y_train = np.array(list(traindata['label']))
 
+
         print("Test Data : " + str(test_fst) + "-" + str(test_end) + " / Train Data Num : " + str(len(traindata)))
+
 
         # 線形SVMのインスタンスを生成
         model = svm.SVC(kernel = 'linear', C=1)
@@ -168,7 +167,7 @@ def SVM_LOO(data):
     return result
 
 
-# In[348]:
+# In[4]:
 
 if __name__ == '__main__':
 
@@ -187,19 +186,24 @@ if __name__ == '__main__':
     al135 = al135.set_index(0)
 
 
-    # In[350]:
-
-    # 全ボクセルの識別率を格納するデータフレーム
-    voxAc = pd.DataFrame(index = sorted(list(set(al45.index))), columns = [col_name])
+    # In[360]:
 
     # ボクセル数
     voxNum = len(al45) // 4
+
+    # 全ボクセルの識別率を格納するデータフレーム
+    voxAc = pd.DataFrame(index = range(voxNum), columns = [col_name])
+
+    counter = 0
+    csvcounter = 0
+    voxNames = []
+
 
     for voxNo in range(voxNum):
 
         voxName = 'Voxel' + str(voxNo + 1)
 
-        print(voxName)
+        print(voxName + '( ' + str(counter) + ' / ' + str(voxNum) + ' )')
 
         # ボクセルのデータを取得
         al45Vox = al45.loc[voxName]
@@ -225,16 +229,41 @@ if __name__ == '__main__':
         print(result_vox)
 
         # データフレームに格納
-        voxAc.at[voxName, col_name] = result_vox
+        voxAc.at[voxNo, :] = result_vox
+
+        # 途中経過見る用
+        # 何ボクセルで一度出力するか
+        midNum = 1000
+
+        if (counter % midNum == 0) and (counter != 0):
+
+            PATH_test = PATH + 'ACMID' + str(csvcounter) + '[loo]_VOXtimeseries' + str(N) +'_SVM.csv'
+            print(PATH_test)
+            MidVoxAc = voxAc.iloc[(csvcounter * midNum):((csvcounter + 1) * midNum), :]
+            MidVoxAc.index = voxNames
+            MidVoxAc.to_csv(PATH_test, index = True)
+
+            csvcounter = csvcounter + 1
+
+        counter = counter + 1
+        voxNames = voxNames + [voxName]
+
 
 
 
     # In[352]:
 
-    print(voxAc)
     # csv書き出し
     PATH_RESULT = PATH + 'ACCURACY[loo]_VOXtimeseries' + str(N) +'_SVM.csv'
     voxAc.to_csv(PATH_RESULT, index = True)
+
+    # 行名つける
+    voxAc.index = voxNames
+    # csv書き出し
+    PATH_RESULT = PATH + 'ACCURACY[loo]_VOXtimeseries' + str(N) +'_SVM.csv'
+    voxAc.to_csv(PATH_RESULT, index = True)
+
+    # In[ ]:
 
 
     # In[ ]:

@@ -1,20 +1,20 @@
-PATH_DATA="../../Data_mri/angledlinevid-1fe/"
-PATH_SAVE="../"
-
-for dir in 20181119tm 20181119tsk 20181119tst
-do
-
-  PATH_NII="${PATH_DATA}${dir}/"
-
-
-  PATH_BA="${PATH_SAVE}MaskBrodmann/${dir}/"
-
-  echo "------------ ${PATH_NII} | ${PATH_BA} ---------------"
-
-  python Preprocessing_nii2zscore.py ${PATH_NII} ${PATH_BA} rwmaskBA.nii
-
-
-done
+# PATH_DATA="../../Data_mri/angledlinevid-1fe/"
+# PATH_SAVE="../"
+#
+# for dir in 20181119tm 20181119tsk 20181119tst
+# do
+#
+#   PATH_NII="${PATH_DATA}${dir}/"
+#
+#
+#   PATH_BA="${PATH_SAVE}MaskBrodmann/${dir}/"
+#
+#   echo "------------ ${PATH_NII} | ${PATH_BA} ---------------"
+#
+#   python Preprocessing_nii2zscore.py ${PATH_NII} ${PATH_BA} rwmaskBA.nii
+#
+#
+# done
 
 
 PATH_DATA="../MaskBrodmann/"
@@ -25,10 +25,10 @@ SUBs=`ls -F ${PATH_DATA} | grep /`
 for sub in $SUBs
 do
 
-  # voxelフォルダがあるディレクトリまでのパス
-  PATH_voxel="${PATH_DATA}${sub}"
-
-  echo "---------- ${PATH_voxel} ------------"
+  # # voxelフォルダがあるディレクトリまでのパス
+  # PATH_voxel="${PATH_DATA}${sub}"
+  #
+  # echo "---------- ${PATH_voxel} ------------"
 
   # python Preprocessing_tasks.py ${PATH_voxel}
 
