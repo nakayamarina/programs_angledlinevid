@@ -72,6 +72,8 @@ import csv
 
 import nibabel as nib
 
+# !!!!!!!!!! scan_numらへん，dataset，zscoreのパラメータ書き換え
+
 
 # コマンドライン引数で.niiファイルがあるディレクトリまでのパスを取得．
 
