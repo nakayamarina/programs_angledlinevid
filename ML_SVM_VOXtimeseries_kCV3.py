@@ -41,7 +41,7 @@ PATH = args[1]
 # PATH = '../SpmActive/20181119tm/RawData/'
 
 # 1時系列あたりのスキャン数
-N = 15
+N = 30
 
 # 検証手法
 col_name = 'leave-one-out'
