@@ -137,6 +137,7 @@ def splitTask(brain):
 
     # mask適用
     dataAl45 = brain[maskAl45]
+
     dataAl135 = brain[maskAl135]
 
     # splitVoxRun関数で各ボクセル，各試行で分割，csv書き出し
