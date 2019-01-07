@@ -50,8 +50,6 @@
 # 14. 'swr'がファイル名についているniftiファイルを適当に一つ，先ほどできたwmask.niiファイルの順で選択
 # 15. 再生ボタンを押す → rwmask.niiができる
 #
-#
-
 
 # In[1]:
 
@@ -72,12 +70,13 @@ import csv
 
 import nibabel as nib
 
-# !!!!!!!!!! scan_numらへん，dataset，zscoreのパラメータ書き換え
-
 
 # コマンドライン引数で.niiファイルがあるディレクトリまでのパスを取得．
 
 # In[2]:
+
+# !!!!!!!!!! scan_numらへん，dataset，zscoreのパラメータ書き換え
+
 
 args = sys.argv
 PATH = args[1]
@@ -85,8 +84,8 @@ PATH_save = args[2]
 MASK_name = args[3]
 
 # jupyter notebookのときはここで指定
-# PATH = '../../Data_mri/angledlinevid-1fe/20181119mt/'
-# PATH_save = '../MaskBrodmann/20181119mt/'
+# PATH = '../../Data_mri/angledlinevid-1fe/20181119tm/'
+# PATH_save = '../MaskBrodmann/20181227rn/'
 # MASK_name = 'rwmaskBA.nii'
 
 PATH_mask = PATH + MASK_name
@@ -107,7 +106,9 @@ if not os.path.exists(DIR_RAW):
     os.mkdir(DIR_RAW)
 
 
-# In[4]:
+# In[5]:
+
+headcoil = PATH.split('/')[5]
 
 
 # 総スキャン数
@@ -123,17 +124,18 @@ taskNum = 88
 runNum = 4
 
 
-# ## splitTask関数
+# ## splitTaks関数
 #
 # 全てのZ-scoreをまとめたものdataで受け取り，Rock時とscissor時とpaper時のデータを分けてcsvファイルで書き出し
 
-# In[5]:
+# In[10]:
 
 def splitTask(brain):
 
     # 各タスクごとのマスク作成
-    maskAl45 = (([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum)) * 4
-    maskAl135 = (([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum)) * 4
+    maskAl45 = ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum)
+
+    maskAl135 = ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum) + ([False] * restNum) + ([True] * taskNum) + ([False] * restNum) + ([False] * taskNum) + ([False] * restNum)
 
     # mask適用
     dataAl45 = brain[maskAl45]
@@ -144,10 +146,13 @@ def splitTask(brain):
     vox_run_al45 = splitVoxRun(dataAl45)
     al45_file = PATH_RAW + 'raw_al45.csv'
     vox_run_al45.to_csv(al45_file)
+    print(al45_file)
 
     vox_run_al135 = splitVoxRun(dataAl135)
     al135_file = PATH_RAW + 'raw_al135.csv'
     vox_run_al135.to_csv(al135_file)
+    print(al135_file)
+
 
 
 # ## splitVoxRun関数
@@ -183,12 +188,13 @@ def splitVoxRun(data):
     return vox_run_all
 
 
+
 # # main関数
 
 # * fMRIデータ（niftiファイル）読み込み
 # * 全ボクセルデータZ-score化，抽出，書きだし
 
-# In[7]:
+# In[37]:
 
 if __name__ == '__main__':
 
@@ -197,134 +203,137 @@ if __name__ == '__main__':
     nifti = [PATH_nii]
 
 
-# In[15]:
+    # In[8]:
 
-# 教師データの作成（この作業なしにやる方法がわからないので，必要のない作業ではあるがやる）
+    # 教師データの作成（この作業なしにやる方法がわからないので，必要のない作業ではあるがやる）
 
-task = ['-1'] * restNum
-task0 = ['0'] * taskNum
-task1 = ['-1'] * restNum
-task2 = ['1'] * taskNum
-task3 = ['-1'] * restNum
+    task_p1 = ['-1'] * restNum
+    task_p2 = ['-1'] * restNum
 
-task.extend(task0)
-task.extend(task1)
-task.extend(task2)
-task.extend(task3)
+    task45 = ['0'] * taskNum
+    task135 = ['1'] * taskNum
+    taskRest = ['-1'] * restNum
 
-task = task* 4
+    # pattern1:Rest -> 45 -> Rest -> 135 -> Rest
+    task_p1.extend(task45)
+    task_p1.extend(taskRest)
+    task_p1.extend(task135)
+    task_p1.extend(taskRest)
 
-target = pd.DataFrame(task)
+    # pattern2:Rest -> 135 -> Rest -> 45 -> Rest
+    task_p2.extend(task135)
+    task_p2.extend(taskRest)
+    task_p2.extend(task45)
+    task_p2.extend(taskRest)
 
-PATH_target = PATH + 'targets_list.csv'
-target.to_csv(PATH_target, index = False, header = None)
-print('target')
+    task = task_p2 + task_p1 + task_p2 + task_p2
 
-targets_list = []
+    target = pd.DataFrame(task)
 
-targets_file = open(PATH_target, 'rU')
-dataReader = csv.reader(targets_file)
+    PATH_target = PATH + 'targets_list.csv'
+    target.to_csv(PATH_target, index = False, header = None)
+    print('target')
 
-for row in dataReader:
-    targets_list.append(row[0])
+    targets_list = []
 
+    targets_file = open(PATH_target, 'rU')
+    dataReader = csv.reader(targets_file)
 
-# In[16]:
-
-# チャンク（試行数リスト？）の作成（この作業なしにやる方法がわからないので，必要のない作業ではあるがやる）
-
-chunk = ['1'] * scan_num
-chunk0 = ['2'] * scan_num
-chunk1 = ['3'] * scan_num
-chunk2 = ['4'] * scan_num
-
-chunk.extend(chunk0)
-chunk.extend(chunk1)
-chunk.extend(chunk2)
-
-chunks = pd.DataFrame(chunk)
-
-PATH_chunk = PATH + 'chunks_list.csv'
-chunks.to_csv(PATH_chunk, index = False, header = None)
-print('chunks')
-
-chunks_list = []
-
-chunks = open(PATH_chunk, 'rU')
-
-for x in chunks:
-    chunks_list.append(x.rstrip('\r\n'))
-
-chunks.close()
+    for row in dataReader:
+        targets_list.append(row[0])
 
 
-# In[17]:
+    # In[44]:
 
-# データセットの整形
+    # チャンク（試行数リスト？）の作成（この作業なしにやる方法がわからないので，必要のない作業ではあるがやる）
 
-dataset = fmri_dataset(nifti, targets=targets_list, chunks=chunks_list, mask=PATH_mask ,sprefix='voxel', tprefix='time', add_fa=None)
+    chunk = ['1'] * scan_num
+    chunk0 = ['2'] * scan_num
+    chunk1 = ['3'] * scan_num
+    chunk2 = ['4'] * scan_num
 
-print('dataset ready')
+    chunk.extend(chunk0)
+    chunk.extend(chunk1)
+    chunk.extend(chunk2)
 
-poly_detrend(dataset, polyord=1, chunks_attr='chunks')
+    chunks = pd.DataFrame(chunk)
 
-dataset = dataset[np.array([l in ['-1', '0', '1']
-                           for l in dataset.targets], dtype='bool')]
+    PATH_chunk = PATH + 'chunks_list.csv'
+    chunks.to_csv(PATH_chunk, index = False, header = None)
+    print('chunks')
 
+    chunks_list = []
 
-# In[18]:
+    chunks = open(PATH_chunk, 'rU')
 
-# Z-score抽出 → データフレーム化
-zscore(dataset, chunks_attr='chunks', param_est=('targets', ['0']), dtype='float32')
-print('z-score')
+    for x in chunks:
+        chunks_list.append(x.rstrip('\r\n'))
 
-VoxelData = pd.DataFrame(np.array(dataset[:,:]))
-print(VoxelData .shape)
-
-
-# In[19]:
-
-voxName = []
-
-for i in range(len(VoxelData.columns)):
-
-    name = 'Voxel' + str(i+1)
-    print(name)
-
-    voxName.append(name)
-
-VoxelData.columns = voxName
+    chunks.close()
 
 
-# In[20]:
+    # In[52]:
 
-# 全データのcevファイル書き出し
-PATH_all = PATH_RAW + 'all_raw.csv'
-VoxelData.to_csv(PATH_all, index = False)
-print(PATH_all)
+    # データセットの整形
 
+    dataset = fmri_dataset(nifti, targets=targets_list, chunks=chunks_list, mask=PATH_mask ,sprefix='voxel', tprefix='time', add_fa=None)
 
-# In[34]:
+    print('dataset ready')
 
-splitTask(VoxelData)
+    poly_detrend(dataset, polyord=1, chunks_attr='chunks')
 
-
-# In[27]:
+    dataset = dataset[np.array([l in ['-1', '0', '1']
+                               for l in dataset.targets], dtype='bool')]
 
 
+    # In[53]:
+
+    # Z-score抽出 → データフレーム化
+    zscore(dataset, chunks_attr='chunks', param_est=('targets', ['0', '1']), dtype='float32')
+    print('z-score')
+
+    VoxelData = pd.DataFrame(np.array(dataset[:,:]))
+    print(VoxelData .shape)
 
 
-# In[19]:
+    # In[54]:
 
-# もしデータセットの整形でサイズエラーが出た時は以下で.niiファイル読み込みしてサイズを確認する
-# nii0 = nib.load('../../Data_mri/tappingState-2fe/20181029rn/64ch/wmaskAll.nii')
-# img0 = nii0.get_data()
-# img0.shape
+    voxName = []
+
+    for i in range(len(VoxelData.columns)):
+
+        name = 'Voxel' + str(i+1)
+        print(name)
+
+        voxName.append(name)
+
+    VoxelData.columns = voxName
 
 
-# In[ ]:
+    # In[24]:
+
+    # 全データのcevファイル書き出し
+    # PATH_all = PATH_RAW + 'all_raw.csv'
+    # VoxelData.to_csv(PATH_all, index = False)
+    # print(PATH_all)
+
+
+    # In[60]:
+
+    splitTask(VoxelData)
+
+
+    # In[ ]:
 
 
 
 
-# In[ ]:
+    # In[19]:
+
+    # もしデータセットの整形でサイズエラーが出た時は以下で.niiファイル読み込みしてサイズを確認する
+    # nii0 = nib.load('../../Data_mri/tappingState-2fe/20181029rn/64ch/wmaskAll.nii')
+    # img0 = nii0.get_data()
+    # img0.shape
+
+
+    # In[ ]:

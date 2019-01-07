@@ -17,6 +17,8 @@
 # done
 
 
+
+
 PATH_DATA="../MaskBrodmann/"
 
 # 被験者フォルダ名取得
