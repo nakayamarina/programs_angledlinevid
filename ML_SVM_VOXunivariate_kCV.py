@@ -43,11 +43,12 @@ PATH = args[1]
 # jupyter notebookのときはここで指定
 # PATH = '../SpmActive/20181119tm/RawData/'
 
-# 検証手法
-col_name = 'leave-one-out'
 
 # 検証手法
 kCV = 10
+
+# 検証手法
+col_name = str(kCV) + 'CV'
 
 
 # ## SVM_kCV関数

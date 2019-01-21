@@ -35,9 +35,9 @@ do
   # python Preprocessing_tasks.py ${PATH_voxel}
 
   # RawDataフォルダまでのパス
-  PATH_RAW="${PATH_DATA}${sub}RawData/"
-
-  echo "---------- ${PATH_RAW} -------------"
+  # PATH_RAW="${PATH_DATA}${sub}RawData/"
+  #
+  # echo "---------- ${PATH_RAW} -------------"
 
   # python Vec_TAUautocor.py ${PATH_RAW}
   #
@@ -55,6 +55,16 @@ do
   #
   # python ML_1dCNN_TDAautocor.py ${PATH_RAW}
 
-  python ML_SVM_VOXtimeseries.py ${PATH_RAW}
+  # python ML_SVM_VOXtimeseries.py ${PATH_RAW}
+
+  PATH_NEW="${PATH_DATA}${sub}/"
+  echo "---------- ${PATH_NEW} -------------"
+
+  python ML_SVM_CORmultivariate_kCV.py ${PATH_NEW}10vox_RawData/
+  python ML_SVM_CORmultivariate_kCV.py ${PATH_NEW}15vox_RawData/
+  python ML_SVM_CORmultivariate_kCV.py ${PATH_NEW}30vox_RawData/
+  python ML_SVM_CORmultivariate_kCV.py ${PATH_NEW}45vox_RawData/
+  python ML_SVM_CORmultivariate_kCV.py ${PATH_NEW}200vox_RawData/
+
 
 done

@@ -23,7 +23,7 @@
 print('############ ML_SVM_VOXtimeseries_kCV.py program excution ############')
 
 
-# In[42]:
+# In[31]:
 
 import numpy as np
 import pandas as pd
@@ -32,27 +32,27 @@ import sys
 from sklearn import svm
 
 
-# In[43]:
+# In[32]:
 
 args = sys.argv
 PATH = args[1]
 
-# # jupyter notebookのときはここで指定
+# jupyter notebookのときはここで指定
 # PATH = '../SpmActive/20181119tm/RawData/'
 
 # 1時系列あたりのスキャン数
-N = 30
-
-# 検証手法
-col_name = 'leave-one-out'
+N = 15
 
 kCV = 10
+
+# 検証手法
+col_name = str(kCV) + 'CV'
 
 # 試行数
 runNum = 4
 
 
-# In[44]:
+# In[33]:
 
 # 機械学習に用いるデータ詳細を格納
 data_info = pd.DataFrame(index = [], columns = [])
@@ -65,7 +65,7 @@ vec_info = pd.DataFrame(index = [], columns = [])
 # 引数としてあるボクセルにおける全試行分のデータをdata，タスクを見分けるための番号をlabelに受け取る．
 # 各試行で1ずつずらしながらNスキャン分の時系列データを取得する．全試行の時系列データをまとめて返す．
 
-# In[45]:
+# In[34]:
 
 def TsShift(data, label):
 
@@ -108,7 +108,7 @@ def TsShift(data, label):
 # テストデータはdataにおける全時系列データ，教師データは条件に当てはまる時系列データであり，
 # 10分割交差検証法を用いて識別率を算出，平均を計算し，main関数へ返す．
 
-# In[46]:
+# In[35]:
 
 def SVM_kCV(data, key):
 
@@ -194,41 +194,41 @@ def SVM_kCV(data, key):
 
         ####### 機械学習に用いるデータ詳細 #######
 
-        # 全てのデータのラベル・試行数・Scan始まり番号情報
-        all_lrf = data.iloc[:, 0:4]
+        if key == 'Voxel1':
 
-        # ある1グループをテストデータとした時の教師データのラベル・試行数・Scan始まり番号情報
-        cv_lrf = traindata.iloc[:, 0:4]
+            # 全てのデータのラベル・試行数・Scan始まり番号情報
+            all_lrf = data.iloc[:, 0:4]
 
-        # 教師データであることを示す'train'を結合
-        cv_one = pd.DataFrame(['train'] * len(cv_lrf))
-        cv_one.index = cv_lrf.index
-        cv_lrf = pd.concat([cv_lrf, cv_one], axis = 1)
+            # ある1グループをテストデータとした時の教師データのラベル・試行数・Scan始まり番号情報
+            cv_lrf = traindata.iloc[:, 0:4]
 
-        # mergeすることで教師データは全データのうちのどこなのかを一覧化する
-        lrf = pd.merge(all_lrf, cv_lrf, on=['label', 'run', 'fst', 'end'], how = 'left')
+            # 教師データであることを示す'train'を結合
+            cv_one = pd.DataFrame(['train'] * len(cv_lrf))
+            cv_one.index = cv_lrf.index
+            cv_lrf = pd.concat([cv_lrf, cv_one], axis = 1)
 
-        # ラベル・試行数・Scan始まり番号情報を結合して，インデックスとする
-        train_test = pd.DataFrame(lrf.iloc[:, len(lrf.columns)-1])
-        lrf_list = list(lrf['label'].astype(str) + '-' + lrf['run'].astype(str) + '-' + lrf['fst'].astype(str) + '-' + lrf['end'].astype(str))
-        train_test.index = lrf_list
+            # mergeすることで教師データは全データのうちのどこなのかを一覧化する
+            lrf = pd.merge(all_lrf, cv_lrf, on=['label', 'run', 'fst', 'end'], how = 'left')
 
-        # ボクセル番号，テストデータの最初のデータの情報と最後のデータの情報（ラベル-試行数-最初or最後のScan数），
-        # テストデータor教師データの一覧の順に並べたデータフレーム作成（横長）
-        train_test = train_test.T
+            # ラベル・試行数・Scan始まり番号情報を結合して，インデックスとする
+            train_test = pd.DataFrame(lrf.iloc[:, len(lrf.columns)-1])
+            lrf_list = list(lrf['label'].astype(str) + '-' + lrf['run'].astype(str) + '-' + lrf['fst'].astype(str) + '-' + lrf['end'].astype(str))
+            train_test.index = lrf_list
 
-        test_info = pd.DataFrame([str(test_Flabel) + '-' + str(test_Frun) + '-' + str(test_fst)] + [str(test_Elabel) + '-' + str(test_Erun) + '-' + str(test_end)]).T
-        test_info.columns = ['Test-l-r-fst', 'Test-l-r-end']
+            # ボクセル番号，テストデータの最初のデータの情報と最後のデータの情報（ラベル-試行数-最初or最後のScan数），
+            # テストデータor教師データの一覧の順に並べたデータフレーム作成（横長）
+            train_test = train_test.T
 
-        vox_df = pd.DataFrame([key])
-        vox_df.columns = ['BAvoxelNum']
+            test_info = pd.DataFrame([str(test_Flabel) + '-' + str(test_Frun) + '-' + str(test_fst)] + [str(test_Elabel) + '-' + str(test_Erun) + '-' + str(test_end)]).T
+            test_info.columns = ['Test-l-r-fst', 'Test-l-r-end']
 
-        vox_df_test_info = pd.concat([vox_df, test_info], axis = 1)
-        vox_df_test_info_train_test = pd.concat([vox_df_test_info, train_test], axis = 1)
+            vox_df = pd.DataFrame([key])
+            vox_df.columns = ['BAvoxelNum']
 
-        print(vox_df_test_info_train_test)
+            vox_df_test_info = pd.concat([vox_df, test_info], axis = 1)
+            vox_df_test_info_train_test = pd.concat([vox_df_test_info, train_test], axis = 1)
 
-        vec_info_sub = pd.concat([vec_info_sub, vox_df_test_info_train_test])
+            vec_info_sub = pd.concat([vec_info_sub, vox_df_test_info_train_test])
 
         ###################################
 
@@ -262,16 +262,30 @@ def SVM_kCV(data, key):
 
     ####### 機械学習に用いるデータ詳細 #######
 
-    # vec_infoがグローバル変数であることを示してmerge
-    global vec_info
-    vec_info = pd.concat([vec_info, vec_info_sub])
+    if key == 'Voxel1':
+
+        # vec_infoがグローバル変数であることを示してmerge
+        global vec_info
+        vec_info = pd.concat([vec_info, vec_info_sub])
+
+        # 詳細csv書き出し
+
+        details = pd.merge(data_info, vec_info, on=['BAvoxelNum'], how='right')
+
+        PATH_dt = PATH + 'DETAILS[' + str(kCV) + 'CV]_VOXtimeseriesDetails' + str(N) + '_SVM.csv'
+        details.to_csv(PATH_dt)
+
+        print(PATH_dt)
+
+    ###################################
+
 
     return result
 
 
 # # main関数
 
-# In[47]:
+# In[36]:
 
 if __name__ == '__main__':
 
@@ -290,98 +304,91 @@ if __name__ == '__main__':
     al135 = al135.set_index(0)
 
 
-    # In[48]:
+# In[37]:
 
-    # ボクセル数
-    voxNum = len(al45) // 4
+# ボクセル数
+voxNum = len(al45) // 4
 
-    # 全ボクセルの識別率を格納するデータフレーム
-    voxAc = pd.DataFrame(index = range(voxNum), columns = [col_name])
+# 全ボクセルの識別率を格納するデータフレーム
+voxAc = pd.DataFrame(index = range(voxNum), columns = [col_name])
 
-    counter = 0
-    csvcounter = 0
-    voxNames = []
+counter = 0
+csvcounter = 0
+voxNames = []
 
 
-    for voxNo in range(voxNum):
+for voxNo in range(voxNum):
 
-        voxName = 'Voxel' + str(voxNo + 1)
-        print(voxName + '( ' + str(counter+1) + ' / ' + str(voxNum) + ' )')
+    voxName = 'Voxel' + str(voxNo + 1)
+    print(voxName + '( ' + str(counter+1) + ' / ' + str(voxNum) + ' )')
 
-        # ボクセルのデータを取得
-        al45Vox = al45.loc[voxName]
-        al135Vox = al135.loc[voxName]
+    # ボクセルのデータを取得
+    al45Vox = al45.loc[voxName]
+    al135Vox = al135.loc[voxName]
 
-        # ボクセルにおける時系列データを取得
-        al45VoxTs = TsShift(al45Vox, 0)
-        al135VoxTs = TsShift(al135Vox, 1)
+    # ボクセルにおける時系列データを取得
+    al45VoxTs = TsShift(al45Vox, 0)
+    al135VoxTs = TsShift(al135Vox, 1)
 
-        # 全タスクを縦結合
-        VoxTs = pd.concat([al45VoxTs, al135VoxTs])
+    # 全タスクを縦結合
+    VoxTs = pd.concat([al45VoxTs, al135VoxTs])
 
-        # 0-3列目は条件判定用の要素，要素名をつけておく
-        col_names = list(VoxTs.columns)
-        col_names[0:4] = ['label', 'run', 'fst', 'end']
-        VoxTs.columns = col_names
+    # 0-3列目は条件判定用の要素，要素名をつけておく
+    col_names = list(VoxTs.columns)
+    col_names[0:4] = ['label', 'run', 'fst', 'end']
+    VoxTs.columns = col_names
 
-        VoxTs.index = range(0,len(VoxTs))
+    VoxTs.index = range(0,len(VoxTs))
 
-        ####### 機械学習に用いるデータ詳細 #######
+    ####### 機械学習に用いるデータ詳細 #######
 
-        # data_infoに情報を格納する
-        Dinfo = pd.DataFrame({'TimeSeries(Scan)':[N], 'kCV':[kCV], 'BAvoxelNum':[voxName], 'Data':[len(VoxTs)]})
-        print(Dinfo)
-        data_info = pd.concat([data_info, Dinfo])
+    # data_infoに情報を格納する
+    Dinfo = pd.DataFrame({'TimeSeries(Scan)':[N], 'kCV':[kCV], 'BAvoxelNum':[voxName], 'Data':[len(VoxTs)]})
+    data_info = pd.concat([data_info, Dinfo])
 
-        ######################################
+    ######################################
 
-        # 学習と評価
-        result_vox = SVM_kCV(VoxTs, voxName)
+    # 学習と評価
+    result_vox = SVM_kCV(VoxTs, voxName)
 
-        print(result_vox)
+    print(result_vox)
 
-        # データフレームに格納
-        voxAc.at[voxNo, :] = result_vox
+    # データフレームに格納
+    voxAc.at[voxNo, :] = result_vox
 
-        # 途中経過見る用
-        # 何ボクセルで一度出力するか
-        midNum = 1000
+    # 途中経過見る用
+    # 何ボクセルで一度出力するか
+    midNum = 1000
 
-        if (counter % midNum == 0) and (counter != 0):
+    if (counter % midNum == 0) and (counter != 0):
 
-            PATH_test = PATH + 'ACMID' + str(csvcounter) + '[' + str(kCV) + 'cv]_VOXtimeseries' + str(N) +'_SVM.csv'
-            print(PATH_test)
-            MidVoxAc = voxAc.iloc[(csvcounter * midNum):((csvcounter + 1) * midNum), :]
-            MidVoxAc.index = voxNames[(csvcounter * midNum):((csvcounter + 1) * midNum)]
-            MidVoxAc.to_csv(PATH_test, index = True)
+        PATH_test = PATH + 'ACMID' + str(csvcounter) + '[' + str(kCV) + 'cv]_VOXtimeseries' + str(N) +'_SVM.csv'
+        print(PATH_test)
+        MidVoxAc = voxAc.iloc[(csvcounter * midNum):((csvcounter + 1) * midNum), :]
+        MidVoxAc.index = voxNames[(csvcounter * midNum):((csvcounter + 1) * midNum)]
+        MidVoxAc.to_csv(PATH_test, index = True)
 
-            csvcounter = csvcounter + 1
+        csvcounter = csvcounter + 1
 
-        counter = counter + 1
-        voxNames = voxNames + [voxName]
-
+    counter = counter + 1
+    voxNames = voxNames + [voxName]
 
 
 
-    # In[49]:
 
-    # csv書き出し
-    PATH_RESULT = PATH + 'ACCURACY[' + str(kCV) + 'CV]_VOXtimeseries' + str(N) +'_SVM.csv'
-    voxAc.to_csv(PATH_RESULT, index = True)
+# In[38]:
 
-    # 行名つける
-    voxAc.index = voxNames
+# csv書き出し
+PATH_RESULT = PATH + 'ACCURACY[' + str(kCV) + 'CV]_VOXtimeseries' + str(N) +'_SVM.csv'
+voxAc.to_csv(PATH_RESULT, index = True)
 
-    # csv書き出し
-    PATH_RESULT = PATH + 'ACCURACY[' + str(kCV) + 'CV]_VOXtimeseries' + str(N) +'_SVM.csv'
-    voxAc.to_csv(PATH_RESULT, index = True)
+# 行名つける
+voxAc.index = voxNames
 
-    # 詳細csv書き出し
-
-    details = pd.merge(data_info, vec_info, on=['BAvoxelNum'], how='right')
-
-    PATH_dt = PATH + 'DETAILS[' + str(kCV) + 'CV]_VOXtimeseriesDetails' + str(N) + '_SVM.csv'
-    details.to_csv(PATH_dt)
+# csv書き出し
+PATH_RESULT = PATH + 'ACCURACY[' + str(kCV) + 'CV]_VOXtimeseries' + str(N) +'_SVM.csv'
+voxAc.to_csv(PATH_RESULT, index = True)
 
 
-    # In[ ]:
+
+# In[ ]:
